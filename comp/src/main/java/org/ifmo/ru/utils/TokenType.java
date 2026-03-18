@@ -1,4 +1,4 @@
-package org.ifmo.ru;
+package org.ifmo.ru.utils;
 
 
 public enum TokenType{
