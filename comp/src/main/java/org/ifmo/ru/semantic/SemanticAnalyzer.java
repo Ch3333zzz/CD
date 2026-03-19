@@ -22,7 +22,7 @@ public class SemanticAnalyzer {
 
     private void checkUnusedVariables(SemanticEnvironment env) {
         for (Map.Entry<String, VariableInfo> entry : env.getVariables().entrySet()) {
-            if (!entry.getValue().isUsed()) {
+            if (!entry.getValue().isUsed() && entry.getValue().isDefined()) {
                 warnings.add("Unused variable: '" + entry.getKey() + "'");
             }
         }
@@ -38,6 +38,10 @@ public class SemanticAnalyzer {
 
             if (!environment.defineVariable(varStatement.getName())) {
                 errors.add("Variable '" + varStatement.getName() + "' is already defined.");
+            }
+
+            if (varStatement.getInitializer() != null) {
+                environment.markAsInitialized(varStatement.getName());
             }
 
         } else if (statement instanceof PrintStatement printStatement) {
@@ -81,7 +85,11 @@ public class SemanticAnalyzer {
         } else if (expression instanceof VariableExpression v) {
             if (!environment.isVariableDefined(v.getName())) {
                 errors.add("Variable '" + v.getName() + "' is not defined.");
-            } else {
+            } else if (!environment.isVariableInitialized(v.getName())) {
+                errors.add("Variable '" + v.getName() + "' is used before initialization.");
+                environment.markAsUsed(v.getName());
+            }
+            else {
                 environment.markAsUsed(v.getName());
             }
 

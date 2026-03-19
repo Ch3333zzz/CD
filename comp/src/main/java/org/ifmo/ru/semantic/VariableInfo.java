@@ -7,5 +7,6 @@ import lombok.Setter;
 @Setter
 public class VariableInfo { 
     private boolean isUsed = false;
+    private boolean isDefined = false;
     private boolean isInitialized = false;
 }

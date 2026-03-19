@@ -34,11 +34,31 @@ public class SemanticEnvironment {
         return false;
     }
 
+    public boolean isVariableInitialized(String name) {
+        if (variables.containsKey(name)) {
+            return variables.get(name).isInitialized();
+        }
+        
+        if (parent != null) {
+            return parent.isVariableInitialized(name);
+        }
+
+        return false;
+    }
+
     public void markAsUsed(String name) {
         if (variables.containsKey(name)) {
             variables.get(name).setUsed(true);
         } else if (parent != null) {
             parent.markAsUsed(name); 
+        }
+    }
+
+    public void markAsInitialized(String name) {
+         if (variables.containsKey(name)) {
+            variables.get(name).setInitialized(true);
+        } else if (parent != null) {
+            parent.markAsInitialized(name); 
         }
     }
 
