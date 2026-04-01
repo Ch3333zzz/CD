@@ -65,4 +65,14 @@ public class SemanticEnvironment {
     public Map<String, VariableInfo> getVariables() {
         return this.variables;
     }
+
+    public VariableInfo getVariableInfo(String name) {
+    if (variables.containsKey(name)) {
+        return variables.get(name);
+    }
+    if (parent != null) {
+        return parent.getVariableInfo(name);
+    }
+    return null;
+}
 }

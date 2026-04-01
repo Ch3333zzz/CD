@@ -32,16 +32,18 @@ public class SemanticAnalyzer {
         if (statement == null) return;
 
         if (statement instanceof VarStatement varStatement) {
-            if (varStatement.getInitializer() != null) {
-                visitExpression(varStatement.getInitializer());
-            }
-
             if (!environment.defineVariable(varStatement.getName())) {
                 errors.add("Variable '" + varStatement.getName() + "' is already defined.");
             }
 
             if (varStatement.getInitializer() != null) {
-                environment.markAsInitialized(varStatement.getName());
+                VariableType initType = visitExpression(varStatement.getInitializer());
+                
+                VariableInfo info = environment.getVariableInfo(varStatement.getName());
+                if (info != null) {
+                    info.setVariableType(initType);
+                    environment.markAsInitialized(varStatement.getName());
+                }
             }
 
         } else if (statement instanceof PrintStatement printStatement) {
@@ -59,55 +61,97 @@ public class SemanticAnalyzer {
             }
 
             checkUnusedVariables(environment);
-
             environment = previousEnvironment;
 
         } else if (statement instanceof IfStatement ifStatement) {
-            visitExpression(ifStatement.getCondition());
+            VariableType condType = visitExpression(ifStatement.getCondition());
+            if (condType != VariableType.BOOLEAN && condType != VariableType.UNKNOWN) {
+                errors.add("Condition in 'if' statement must evaluate to a boolean, but got " + condType);
+            }
+            
             visitStatement(ifStatement.getThenBranch());
             if (ifStatement.getElseBranch() != null) {
                 visitStatement(ifStatement.getElseBranch());
             }
 
         } else if (statement instanceof WhileStatement whileStatement) {
-            visitExpression(whileStatement.getCondition());
+            VariableType condType = visitExpression(whileStatement.getCondition());
+            if (condType != VariableType.BOOLEAN && condType != VariableType.UNKNOWN) {
+                errors.add("Condition in 'while' statement must evaluate to a boolean, but got " + condType);
+            }
+            
             visitStatement(whileStatement.getBody());
 
         } else {
             errors.add("Unsupported statement type: " + statement.getClass().getSimpleName());
         }
     }
-
-    public void visitExpression(Expression expression) {
-        if (expression == null) return;
+    public VariableType visitExpression(Expression expression) {
+        if (expression == null) return VariableType.UNKNOWN;
 
         if (expression instanceof NumberExpression) {
-        } else if (expression instanceof VariableExpression v) {
-            if (!environment.isVariableDefined(v.getName())) {
+            return VariableType.NUMBER;
+        } 
+        
+        else if (expression instanceof StringExpression) {
+            return VariableType.STRING;
+        } else if (expression instanceof BooleanExpression) {
+            return VariableType.BOOLEAN;
+        } 
+
+        else if (expression instanceof VariableExpression v) {
+            VariableInfo info = environment.getVariableInfo(v.getName());
+            if (info == null) {
                 errors.add("Variable '" + v.getName() + "' is not defined.");
-            } else if (!environment.isVariableInitialized(v.getName())) {
+                return VariableType.UNKNOWN;
+            } 
+            if (!info.isInitialized()) {
                 errors.add("Variable '" + v.getName() + "' is used before initialization.");
-                environment.markAsUsed(v.getName());
             }
-            else {
-                environment.markAsUsed(v.getName());
-            }
+            environment.markAsUsed(v.getName());
+            return info.getVariableType() != null ? info.getVariableType() : VariableType.UNKNOWN;
 
         } else if (expression instanceof AssignExpression a) {
-            visitExpression(a.getValue());
-            if (!environment.isVariableDefined(a.getName())) {
+            VariableType valueType = visitExpression(a.getValue());
+            VariableInfo info = environment.getVariableInfo(a.getName());
+
+            if (info == null) {
                 errors.add("Variable '" + a.getName() + "' is not defined.");
+                return VariableType.UNKNOWN;
             }
 
+            if (info.getVariableType() == null) {
+                info.setVariableType(valueType);
+                environment.markAsInitialized(a.getName());
+            } else {
+                if (info.getVariableType() != valueType && valueType != VariableType.UNKNOWN) {
+                    errors.add("Type mismatch: Cannot assign " + valueType + " to " + info.getVariableType());
+                }
+            }
+            return valueType;
+
         } else if (expression instanceof BinaryExpression b) {
-            visitExpression(b.getLeft());
-            visitExpression(b.getRight());
+            VariableType left = visitExpression(b.getLeft());
+            VariableType right = visitExpression(b.getRight());
+            try {
+                return TypeChecker.getBinaryOperationResultType(left, right, b.getOperator());
+            } catch (SemanticException e) {
+                errors.add(e.getMessage());
+                return VariableType.UNKNOWN;
+            }
 
         } else if (expression instanceof UnaryExpression u) {
-            visitExpression(u.getRight());
+            VariableType type = visitExpression(u.getRight());
+            try {
+                return TypeChecker.getUnaryOperationResultType(type, u.getOperator());
+            } catch (SemanticException e) {
+                errors.add(e.getMessage());
+                return VariableType.UNKNOWN;
+            }
 
         } else {
             errors.add("Unsupported expression type: " + expression.getClass().getSimpleName());
+            return VariableType.UNKNOWN;
         }
     }
 

@@ -6,6 +6,8 @@ public enum TokenType{
     ID,
     STRING,
     VAR,
+    TRUE,
+    FALSE,
 
     PRINT,
     IF, ELSE,
@@ -15,6 +17,7 @@ public enum TokenType{
     EQ, EQEQ, EXCL, NEQ,        // = == ! !=
     LT, GT, LTEQ, GTEQ,         // < > <= >=
     AND, OR,                    // && ||
+    NOT,                        // !
 
     LPAREN, RPAREN, // ( )
     LBRACE, RBRACE, // { }

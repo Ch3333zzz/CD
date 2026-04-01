@@ -14,11 +14,13 @@ public class Lexer {
     private int column = 1;
 
     private static final Map<String, TokenType> KEYWORDS = Map.of(
-            "var", TokenType.VAR,
-            "print", TokenType.PRINT,
-            "if", TokenType.IF,
-            "else", TokenType.ELSE,
-            "while", TokenType.WHILE
+        "var", TokenType.VAR,
+        "print", TokenType.PRINT,
+        "if", TokenType.IF,
+        "else", TokenType.ELSE,
+        "while", TokenType.WHILE,
+        "true", TokenType.TRUE,
+        "false", TokenType.FALSE
     );
 
     private static final Map<String, TokenType> OPERATORS = Map.ofEntries(
@@ -65,6 +67,11 @@ public class Lexer {
 
             if (Character.isLetter(current)) {
                 tokens.add(readWord());
+                continue;
+            }
+
+            if (current == '"') {
+                tokens.add(readString());
                 continue;
             }
 
@@ -150,5 +157,27 @@ public class Lexer {
         }
 
         return current;
+    }
+
+    private Token readString() {
+        int startPos = position;
+        int startLine = line;
+        int startCol = column;
+
+        next();
+
+        StringBuilder sb = new StringBuilder();
+        while (peek() != '"' && peek() != '\0') {
+            sb.append(next());
+        }
+
+        if (peek() == '\0') {
+            throw new RuntimeException("[Lexer Error] Unterminated string starting at Line %d, Column %d"
+                    .formatted(startLine, startCol));
+        }
+
+        next();
+
+        return new Token(TokenType.STRING, sb.toString(), startPos, startLine, startCol);
     }
 }

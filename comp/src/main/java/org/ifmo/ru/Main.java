@@ -12,7 +12,7 @@ import org.ifmo.ru.semantic.SemanticAnalyzer;
 public class Main {
     public static void main(String[] args) {
     try {
-        String codeExample = "var x = 123; var y; print (x + y) * 2;";
+        String codeExample = "var x = 10 + z; x = \"String\"; var y = x + \"String\"; var z = true + \"String\"; z = \"String\";";
         Lexer lexer = new Lexer(codeExample);
         List<Token> tokens = lexer.tokenize();
 

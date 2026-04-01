@@ -210,29 +210,6 @@ public class Parser {
         return parsePrimary();
     }
 
-    private Expression parsePrimary() throws Exception{
-        if(match(TokenType.NUMBER)) {
-            double value = Double.parseDouble(previouse().getValue());
-
-            return new NumberExpression(value);
-        }
-
-        if(match(TokenType.ID)) {
-            return new VariableExpression(previouse().getValue());
-        }
-
-        if(match(TokenType.LPAREN)) {
-            Expression expression = parseExpression();
-            consume(TokenType.RPAREN, "Expecting \')\' after expression");
-            return expression;
-        }
-
-        throw new Exception("[Parser Error] Line %d, Col %d: Expecting expression".formatted(peek().getLine(), peek().getColumn()));
-    }
-
-
-
-
     private boolean match(TokenType... types) {
         for(TokenType type : types) {
             if(check(type)) {
@@ -265,5 +242,34 @@ public class Parser {
         if(check(type)) return advance();
         Token token = peek();
         throw new Exception("[Parser Error] Line %d, Col %d: %s\n".formatted(token.getLine(), token.getColumn(), message));
+    }
+
+    private Expression parsePrimary() throws Exception {
+    if (match(TokenType.NUMBER)) {
+        double value = Double.parseDouble(previouse().getValue());
+        return new NumberExpression(value);
+    }
+    if (match(TokenType.STRING)) {
+        return new StringExpression(previouse().getValue());
+    }
+
+    if (match(TokenType.TRUE)) {
+        return new BooleanExpression(true);
+    }
+    if (match(TokenType.FALSE)) {
+        return new BooleanExpression(false);
+    }
+
+    if (match(TokenType.ID)) {
+        return new VariableExpression(previouse().getValue());
+    }
+
+    if (match(TokenType.LPAREN)) {
+        Expression expression = parseExpression();
+        consume(TokenType.RPAREN, "Expecting ')' after expression");
+        return expression;
+    }
+
+    throw new Exception("[Parser Error] Line %d, Col %d: Expecting expression".formatted(peek().getLine(), peek().getColumn()));
     }
 }
