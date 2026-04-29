@@ -9,39 +9,42 @@ public class TypeChecker {
             return VariableType.UNKNOWN;
         }
 
-        if (left != right) {
-            throw new SemanticException("Type mismatch: cannot compare " + left + " and " + right);
-        }
-
-        VariableType result = switch (operator) {
+        return switch (operator) {
             case PLUS -> {
-                if (left == VariableType.STRING || left == VariableType.NUMBER) yield left;
-                yield null;
+                if (left == VariableType.STRING || right == VariableType.STRING) {
+                    yield VariableType.STRING;
+                }
+                if (left == VariableType.NUMBER && right == VariableType.NUMBER) {
+                    yield VariableType.NUMBER;
+                }
+                throw new SemanticException("Operator '+' cannot be applied to " + left + " and " + right);
             }
             case MINUS, STAR, SLASH -> {
-                if (left == VariableType.NUMBER) yield VariableType.NUMBER;
-                yield null;
+                if (left == VariableType.NUMBER && right == VariableType.NUMBER) {
+                    yield VariableType.NUMBER;
+                }
+                throw new SemanticException("Operator '" + operator + "' requires both operands to be NUMBER");
             }
-            case EQ, NEQ -> {
+            case EQEQ, NEQ -> {
+                if (left != right) {
+                    throw new SemanticException("Type mismatch: cannot compare " + left + " and " + right);
+                }
                 yield VariableType.BOOLEAN;
             }
             case LT, LTEQ, GT, GTEQ -> {
-                if (left == VariableType.NUMBER) yield VariableType.BOOLEAN;
-                if (left == VariableType.BOOLEAN) yield VariableType.BOOLEAN;
-                yield null;
+                if (left == VariableType.NUMBER && right == VariableType.NUMBER) {
+                    yield VariableType.BOOLEAN;
+                }
+                throw new SemanticException("Comparison operators require NUMBER, but got " + left + " and " + right);
             }
             case AND, OR -> {
-                if (left == VariableType.BOOLEAN) yield VariableType.BOOLEAN;
-                yield null;
+                if (left == VariableType.BOOLEAN && right == VariableType.BOOLEAN) {
+                    yield VariableType.BOOLEAN;
+                }
+                throw new SemanticException("Logical operators require BOOLEAN operands");
             }
-            default -> null;
+            default -> throw new SemanticException("Unknown binary operator: " + operator);
         };
-
-        if (result == null) {
-            throw new SemanticException("Operator '" + operator + "' cannot be applied to type " + left);
-        }
-
-        return result;
     }
 
     public static VariableType getUnaryOperationResultType(VariableType type, TokenType operator) throws SemanticException {
@@ -49,22 +52,16 @@ public class TypeChecker {
             return VariableType.UNKNOWN;
         }
 
-        VariableType result = switch (operator) {
-            case NOT -> {
+        return switch (operator) {
+            case EXCL -> {
                 if (type == VariableType.BOOLEAN) yield VariableType.BOOLEAN;
-                yield null;
+                throw new SemanticException("Operator '!' requires BOOLEAN");
             }
             case MINUS -> {
                 if (type == VariableType.NUMBER) yield VariableType.NUMBER;
-                yield null;
+                throw new SemanticException("Unary '-' requires NUMBER");
             }
-            default -> null;
+            default -> throw new SemanticException("Unknown unary operator: " + operator);
         };
-
-        if (result == null) {
-            throw new SemanticException("Unary operator '" + operator + "' cannot be applied to type " + type);
-        }
-
-        return result;
     }
 }

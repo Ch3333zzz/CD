@@ -63,6 +63,10 @@ public class AstPrinter {
             printNode(assign.getValue(), childIndent, true);
         } else if (node instanceof NumberExpression num) {
             System.out.println("Number: " + num.getValue());
+        } else if (node instanceof StringExpression s) {
+            System.out.println("String: \"" + s.getValue() + "\"");
+        } else if (node instanceof BooleanExpression b) {
+            System.out.println("Boolean: " + b.isValue());
         } else if (node instanceof VariableExpression varExpr) {
             System.out.println("Variable: " + varExpr.getName());
         } else {

@@ -1,51 +1,72 @@
 package org.ifmo.ru;
 
 import java.util.List;
-
 import org.ifmo.ru.lexer.Lexer;
 import org.ifmo.ru.parser.Parser;
 import org.ifmo.ru.parser.AstPrinter;
 import org.ifmo.ru.utils.Token;
 import org.ifmo.ru.parser.ast.statements.Statement;
 import org.ifmo.ru.semantic.SemanticAnalyzer;
+import org.ifmo.ru.interpreter.Interpreter;
 
 public class Main {
     public static void main(String[] args) {
-    try {
-        String codeExample = "var x = 10 + z; x = \"String\"; var y = x + \"String\"; var z = true + \"String\"; z = \"String\";";
-        Lexer lexer = new Lexer(codeExample);
-        List<Token> tokens = lexer.tokenize();
+        try {
+            String codeExample = """
+                    var str1 = "Hello, ";
+                    var str2 = "World!\n";
+                    print str1 + str2;
 
-        Parser parser = new Parser(tokens);
-        List<Statement> ast = parser.parse();
+                    var count = 0;
+                    while (count < 3) {
+                        print "Iteration: " + count;
+                        count = count + 1;
+                    }
 
-        System.out.println("Success parsed: " + ast.size() + " instructions");
-        
-        AstPrinter printer = new AstPrinter();
-        printer.print(ast);
+                    if (count == 3) {
+                        print "Loop finished successfully!";
+                    }
+                    """;
 
-        SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-        semanticAnalyzer.analyze(ast);
+            Lexer lexer = new Lexer(codeExample);
+            List<Token> tokens = lexer.tokenize();
 
-        boolean isCorrect = semanticAnalyzer.getErrors().isEmpty();
-        if (!semanticAnalyzer.getErrors().isEmpty()) {
-            System.out.println("semantic analysis errors:");
-            for (String error : semanticAnalyzer.getErrors()) {
-                System.out.println("- " + error);
+            Parser parser = new Parser(tokens);
+            List<Statement> ast = parser.parse();
+
+            System.out.println("--- AST Tree ---");
+            AstPrinter printer = new AstPrinter();
+            printer.print(ast);
+            System.out.println("----------------\n");
+
+            SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+            semanticAnalyzer.analyze(ast);
+
+            if (!semanticAnalyzer.getErrors().isEmpty()) {
+                System.out.println("Semantic analysis errors found:");
+                for (String error : semanticAnalyzer.getErrors()) {
+                    System.out.println(error);
+                }
+                return;
             }
-        }
-        if (!semanticAnalyzer.getWarnings().isEmpty()) {
-            System.out.println("semantic analysis warnings:");
-            for (String error : semanticAnalyzer.getWarnings()) {
-                System.out.println("- " + error);
-            }
-        }
-        if (isCorrect)
-            System.out.println("The semantic analysis was successful, no errors were found.");
 
-    } catch (Exception e) {
-        System.err.println("Errors: " + e.getMessage());
-        e.printStackTrace();
+            if (!semanticAnalyzer.getWarnings().isEmpty()) {
+                System.out.println("Semantic analysis warnings:");
+                for (String warning : semanticAnalyzer.getWarnings()) {
+                    System.out.println(warning);
+                }
+            }
+
+            System.out.println("Semantic analysis successful. Starting execution...\n");
+
+            System.out.println("--- Program Output ---");
+            Interpreter interpreter = new Interpreter();
+            interpreter.interpret(ast);
+            System.out.println("----------------------");
+
+        } catch (Exception e) {
+            System.err.println("Fatal Error: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
-}
 }
