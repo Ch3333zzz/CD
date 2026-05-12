@@ -14,14 +14,15 @@ public class Lexer {
     private int column = 1;
 
     private static final Map<String, TokenType> KEYWORDS = Map.of(
-        "var", TokenType.VAR,
-        "print", TokenType.PRINT,
-        "if", TokenType.IF,
-        "else", TokenType.ELSE,
-        "while", TokenType.WHILE,
-        "true", TokenType.TRUE,
-        "false", TokenType.FALSE
-    );
+            "var", TokenType.VAR,
+            "print", TokenType.PRINT,
+            "if", TokenType.IF,
+            "else", TokenType.ELSE,
+            "while", TokenType.WHILE,
+            "true", TokenType.TRUE,
+            "false", TokenType.FALSE,
+            "def", TokenType.DEF,
+            "return", TokenType.RETURN);
 
     private static final Map<String, TokenType> OPERATORS = Map.ofEntries(
             Map.entry("==", TokenType.EQEQ),
@@ -42,8 +43,8 @@ public class Lexer {
             Map.entry(")", TokenType.RPAREN),
             Map.entry("{", TokenType.LBRACE),
             Map.entry("}", TokenType.RBRACE),
-            Map.entry(";", TokenType.SEMICOLON)
-    );
+            Map.entry(";", TokenType.SEMICOLON),
+            Map.entry(",", TokenType.COMMA));
 
     public Lexer(String input) {
         this.input = input != null ? input : "";
@@ -105,7 +106,7 @@ public class Lexer {
         }
 
         String text = input.substring(startPos, position);
-        
+
         TokenType type = KEYWORDS.getOrDefault(text, TokenType.ID);
 
         return new Token(type, text, startPos, startLine, startCol);
@@ -135,7 +136,7 @@ public class Lexer {
         }
 
         char badChar = peek();
-        
+
         throw new RuntimeException("[Lexer Error] Unexpected character '%s' at Line %d, Column %d"
                 .formatted(badChar, startLine, startCol));
     }
@@ -145,7 +146,8 @@ public class Lexer {
     }
 
     private char next() {
-        if (position >= input.length()) return '\0';
+        if (position >= input.length())
+            return '\0';
 
         char current = input.charAt(position++);
 

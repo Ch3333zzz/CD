@@ -1,7 +1,6 @@
 package org.ifmo.ru.utils;
 
-
-public enum TokenType{
+public enum TokenType {
     NUMBER,
     ID,
     STRING,
@@ -13,16 +12,18 @@ public enum TokenType{
     IF, ELSE,
     WHILE,
 
-    PLUS, MINUS, STAR, SLASH,   // + - * /
-    EQ, EQEQ, EXCL, NEQ,        // = == ! !=
-    LT, GT, LTEQ, GTEQ,         // < > <= >=
-    AND, OR,                    // && ||
-    NOT,                        // !
+    PLUS, MINUS, STAR, SLASH, // + - * /
+    EQ, EQEQ, EXCL, NEQ, // = == ! !=
+    LT, GT, LTEQ, GTEQ, // < > <= >=
+    AND, OR, // && ||
+    NOT, // !
 
     LPAREN, RPAREN, // ( )
     LBRACE, RBRACE, // { }
 
-    SEMICOLON, // ;
+    SEMICOLON, COMMA, // ; ,
+
+    DEF, RETURN,
 
     EOF
 }

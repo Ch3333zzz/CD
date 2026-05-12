@@ -16,7 +16,7 @@ public class SemanticAnalyzer {
         for (Statement statement : statements) {
             visitStatement(statement);
         }
-        
+
         checkUnusedVariables(environment);
     }
 
@@ -29,7 +29,8 @@ public class SemanticAnalyzer {
     }
 
     public void visitStatement(Statement statement) {
-        if (statement == null) return;
+        if (statement == null)
+            return;
 
         if (statement instanceof VarStatement varStatement) {
             if (!environment.defineVariable(varStatement.getName())) {
@@ -38,7 +39,7 @@ public class SemanticAnalyzer {
 
             if (varStatement.getInitializer() != null) {
                 VariableType initType = visitExpression(varStatement.getInitializer());
-                
+
                 VariableInfo info = environment.getVariableInfo(varStatement.getName());
                 if (info != null) {
                     info.setVariableType(initType);
@@ -46,6 +47,28 @@ public class SemanticAnalyzer {
                 }
             }
 
+        } else if (statement instanceof FunctionStatement f) {
+            if (!environment.defineVariable(f.getName())) {
+                errors.add("Function or variable '" + f.getName() + "' is already defined.");
+            }
+            environment.markAsInitialized(f.getName());
+
+            SemanticEnvironment previousEnv = environment;
+            environment = new SemanticEnvironment(previousEnv);
+
+            for (String param : f.getParameters()) {
+                environment.defineVariable(param);
+                environment.markAsInitialized(param);
+            }
+
+            visitStatement(f.getBody());
+
+            environment = previousEnv;
+
+        } else if (statement instanceof ReturnStatement r) {
+            if (r.getValue() != null) {
+                visitExpression(r.getValue());
+            }
         } else if (statement instanceof PrintStatement printStatement) {
             visitExpression(printStatement.getExpression());
 
@@ -68,7 +91,7 @@ public class SemanticAnalyzer {
             if (condType != VariableType.BOOLEAN && condType != VariableType.UNKNOWN) {
                 errors.add("Condition in 'if' statement must evaluate to a boolean, but got " + condType);
             }
-            
+
             visitStatement(ifStatement.getThenBranch());
             if (ifStatement.getElseBranch() != null) {
                 visitStatement(ifStatement.getElseBranch());
@@ -79,32 +102,49 @@ public class SemanticAnalyzer {
             if (condType != VariableType.BOOLEAN && condType != VariableType.UNKNOWN) {
                 errors.add("Condition in 'while' statement must evaluate to a boolean, but got " + condType);
             }
-            
+
             visitStatement(whileStatement.getBody());
 
         } else {
             errors.add("Unsupported statement type: " + statement.getClass().getSimpleName());
         }
     }
-    public VariableType visitExpression(Expression expression) {
-        if (expression == null) return VariableType.UNKNOWN;
 
-        if (expression instanceof NumberExpression) {
+    public VariableType visitExpression(Expression expression) {
+        if (expression == null)
+            return VariableType.UNKNOWN;
+
+        if (expression instanceof CallExpression call) {
+            if (call.getCallee() instanceof VariableExpression v) {
+                VariableInfo info = environment.getVariableInfo(v.getName());
+                if (info == null) {
+                    errors.add("Function '" + v.getName() + "' is not defined.");
+                }
+                environment.markAsUsed(v.getName());
+            }
+
+            for (Expression arg : call.getArguments()) {
+                visitExpression(arg);
+            }
+
+            return VariableType.UNKNOWN;
+
+        } else if (expression instanceof NumberExpression) {
             return VariableType.NUMBER;
-        } 
-        
+        }
+
         else if (expression instanceof StringExpression) {
             return VariableType.STRING;
         } else if (expression instanceof BooleanExpression) {
             return VariableType.BOOLEAN;
-        } 
+        }
 
         else if (expression instanceof VariableExpression v) {
             VariableInfo info = environment.getVariableInfo(v.getName());
             if (info == null) {
                 errors.add("Variable '" + v.getName() + "' is not defined.");
                 return VariableType.UNKNOWN;
-            } 
+            }
             if (!info.isInitialized()) {
                 errors.add("Variable '" + v.getName() + "' is used before initialization.");
             }
@@ -155,6 +195,11 @@ public class SemanticAnalyzer {
         }
     }
 
-    public List<String> getErrors() { return errors; }
-    public List<String> getWarnings() { return warnings; }
+    public List<String> getErrors() {
+        return errors;
+    }
+
+    public List<String> getWarnings() {
+        return warnings;
+    }
 }

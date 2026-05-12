@@ -3,6 +3,7 @@ package org.ifmo.ru.interpreter;
 import org.ifmo.ru.parser.ast.expressions.*;
 import org.ifmo.ru.parser.ast.statements.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Interpreter {
@@ -26,6 +27,16 @@ public class Interpreter {
                 value = evaluate(v.getInitializer());
             }
             environment.define(v.getName(), value);
+
+        } else if (stmt instanceof FunctionStatement f) {
+            environment.define(f.getName(), f);
+
+        } else if (stmt instanceof ReturnStatement r) {
+            Object value = null;
+            if (r.getValue() != null) {
+                value = evaluate(r.getValue());
+            }
+            throw new ReturnException(value);
 
         } else if (stmt instanceof PrintStatement p) {
             Object value = evaluate(p.getExpression());
@@ -82,6 +93,38 @@ public class Interpreter {
             return environment.get(v.getName());
         }
 
+        if (expr instanceof CallExpression call) {
+            Object callee = evaluate(call.getCallee());
+
+            if (!(callee instanceof FunctionStatement function)) {
+                throw new RuntimeException("Can only call functions.");
+            }
+
+            List<Object> arguments = new ArrayList<>();
+            for (Expression argument : call.getArguments()) {
+                arguments.add(evaluate(argument));
+            }
+
+            if (arguments.size() != function.getParameters().size()) {
+                throw new RuntimeException("Expected " + function.getParameters().size() +
+                        " arguments but got " + arguments.size() + ".");
+            }
+
+            RuntimeEnvironment functionEnv = new RuntimeEnvironment(environment);
+
+            for (int i = 0; i < function.getParameters().size(); i++) {
+                functionEnv.define(function.getParameters().get(i), arguments.get(i));
+            }
+
+            try {
+                executeBlock(function.getBody().getStatements(), functionEnv);
+            } catch (ReturnException returnVal) {
+                return returnVal.getValue();
+            }
+
+            return null;
+        }
+
         if (expr instanceof AssignExpression a) {
             Object value = evaluate(a.getValue());
             environment.assign(a.getName(), value);
@@ -90,7 +133,7 @@ public class Interpreter {
 
         if (expr instanceof UnaryExpression u) {
             Object right = evaluate(u.getRight());
-            
+
             return switch (u.getOperator()) {
                 case MINUS -> -(double) right;
                 case EXCL -> !(boolean) right;
@@ -112,21 +155,18 @@ public class Interpreter {
                 case MINUS -> (double) left - (double) right;
                 case STAR -> (double) left * (double) right;
                 case SLASH -> {
-                    if ((double) right == 0) throw new RuntimeException("Division by zero.");
+                    if ((double) right == 0)
+                        throw new RuntimeException("Division by zero.");
                     yield (double) left / (double) right;
                 }
-                
                 case GT -> (double) left > (double) right;
                 case GTEQ -> (double) left >= (double) right;
                 case LT -> (double) left < (double) right;
                 case LTEQ -> (double) left <= (double) right;
-                
                 case EQEQ -> isEqual(left, right);
                 case NEQ -> !isEqual(left, right);
-                
                 case AND -> (boolean) left && (boolean) right;
                 case OR -> (boolean) left || (boolean) right;
-                
                 default -> throw new RuntimeException("Unknown binary operator.");
             };
         }
@@ -135,8 +175,10 @@ public class Interpreter {
     }
 
     private boolean isEqual(Object a, Object b) {
-        if (a == null && b == null) return true;
-        if (a == null) return false;
+        if (a == null && b == null)
+            return true;
+        if (a == null)
+            return false;
         return a.equals(b);
     }
 }

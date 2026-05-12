@@ -13,19 +13,17 @@ public class Main {
     public static void main(String[] args) {
         try {
             String codeExample = """
-                    var str1 = "Hello, ";
-                    var str2 = "World!\n";
-                    print str1 + str2;
-
-                    var count = 0;
-                    while (count < 3) {
-                        print "Iteration: " + count;
-                        count = count + 1;
+                    def sayHello(name) {
+                        print "Hello, " + name + "!";
                     }
 
-                    if (count == 3) {
-                        print "Loop finished successfully!";
+                    def add(a, b) {
+                        return a + b;
                     }
+
+                    sayHello("World");
+                    var sum = add(5, 10);
+                    print "Sum is: " + sum;
                     """;
 
             Lexer lexer = new Lexer(codeExample);
@@ -56,8 +54,6 @@ public class Main {
                     System.out.println(warning);
                 }
             }
-
-            System.out.println("Semantic analysis successful. Starting execution...\n");
 
             System.out.println("--- Program Output ---");
             Interpreter interpreter = new Interpreter();
