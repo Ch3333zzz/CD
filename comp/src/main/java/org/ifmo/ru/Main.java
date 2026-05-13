@@ -2,6 +2,7 @@ package org.ifmo.ru;
 
 import java.util.List;
 import org.ifmo.ru.lexer.Lexer;
+import org.ifmo.ru.optimezer.AstOptimizer;
 import org.ifmo.ru.parser.Parser;
 import org.ifmo.ru.parser.AstPrinter;
 import org.ifmo.ru.utils.Token;
@@ -13,17 +14,15 @@ public class Main {
     public static void main(String[] args) {
         try {
             String codeExample = """
-                    def sayHello(name) {
-                        print "Hello, " + name + "!";
-                    }
+                    var x = -(-(2 + 2));
+                    var y = "Hello" + ", " + "World" + "!";
+                    print(x);
+                    print("\n");
+                    print(y);
 
-                    def add(a, b) {
-                        return a + b;
+                    if (2 + 2 < 5) {
+                        print("less " + "than five");
                     }
-
-                    sayHello("World");
-                    var sum = add(5, 10);
-                    print "Sum is: " + sum;
                     """;
 
             Lexer lexer = new Lexer(codeExample);
@@ -34,6 +33,12 @@ public class Main {
 
             System.out.println("--- AST Tree ---");
             AstPrinter printer = new AstPrinter();
+            printer.print(ast);
+            System.out.println("----------------\n");
+
+            System.out.println("--- optimazed AST Tree ---");
+            AstOptimizer optimizer = new AstOptimizer();
+            ast = optimizer.optimize(ast);
             printer.print(ast);
             System.out.println("----------------\n");
 
