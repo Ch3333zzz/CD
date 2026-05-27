@@ -14,15 +14,12 @@ public class Main {
     public static void main(String[] args) {
         try {
             String codeExample = """
-                    var x = -(-(2 + 2));
-                    var y = "Hello" + ", " + "World" + "!";
-                    print(x);
-                    print("\n");
-                    print(y);
+                    var myArr = [10, 20, 30 + 5];
+                    print myArr[2];
 
-                    if (2 + 2 < 5) {
-                        print("less " + "than five");
-                    }
+                    myArr[0] = "Edited";
+                    print myArr[0];
+
                     """;
 
             Lexer lexer = new Lexer(codeExample);

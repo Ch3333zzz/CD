@@ -171,6 +171,56 @@ public class Interpreter {
             };
         }
 
+        if (expr instanceof ArrayExpression arrayExpr) {
+            List<Object> elements = new ArrayList<>();
+            for (Expression element : arrayExpr.getElements()) {
+                elements.add(evaluate(element));
+            }
+            return elements;
+        }
+
+        if (expr instanceof IndexExpression indexExpr) {
+            Object array = evaluate(indexExpr.getArray());
+            Object indexObj = evaluate(indexExpr.getIndex());
+
+            if (!(array instanceof List<?> list)) {
+                throw new RuntimeException("Subscript target must be an array.");
+            }
+            if (!(indexObj instanceof Double d)) {
+                throw new RuntimeException("Array index must be a number.");
+            }
+
+            int index = d.intValue();
+            if (index < 0 || index >= list.size()) {
+                throw new RuntimeException("Array index out of bounds: " + index);
+            }
+            return list.get(index);
+        }
+
+        if (expr instanceof ArrayAssignExpression arrAssign) {
+            Object array = evaluate(arrAssign.getArray());
+            Object indexObj = evaluate(arrAssign.getIndex());
+            Object value = evaluate(arrAssign.getValue());
+
+            if (!(array instanceof List)) {
+                throw new RuntimeException("Subscript target must be an array.");
+            }
+            if (!(indexObj instanceof Double d)) {
+                throw new RuntimeException("Array index must be a number.");
+            }
+
+            int index = d.intValue();
+            @SuppressWarnings("unchecked")
+            List<Object> list = (List<Object>) array;
+
+            if (index < 0 || index >= list.size()) {
+                throw new RuntimeException("Array index out of bounds: " + index);
+            }
+
+            list.set(index, value);
+            return value;
+        }
+
         return null;
     }
 

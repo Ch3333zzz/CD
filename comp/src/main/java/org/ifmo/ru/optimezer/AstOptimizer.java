@@ -94,6 +94,21 @@ public class AstOptimizer {
             return new CallExpression(c.getCallee(), optimizedArgs);
         }
 
+        if (expr instanceof ArrayExpression arr) {
+            List<Expression> optimizedElements = arr.getElements().stream()
+                    .map(this::optimizeExpression)
+                    .collect(Collectors.toList());
+            return new ArrayExpression(optimizedElements);
+        }
+        if (expr instanceof IndexExpression idx) {
+            return new IndexExpression(optimizeExpression(idx.getArray()), optimizeExpression(idx.getIndex()));
+        }
+        if (expr instanceof ArrayAssignExpression arrAsgn) {
+            return new ArrayAssignExpression(
+                    optimizeExpression(arrAsgn.getArray()),
+                    optimizeExpression(arrAsgn.getIndex()),
+                    optimizeExpression(arrAsgn.getValue()));
+        }
         return expr;
     }
 }

@@ -20,6 +20,7 @@ public enum TokenType {
 
     LPAREN, RPAREN, // ( )
     LBRACE, RBRACE, // { }
+    LBRACK, RBRACK, // [ ]
 
     SEMICOLON, COMMA, // ; ,
 

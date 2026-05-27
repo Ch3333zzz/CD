@@ -189,6 +189,19 @@ public class SemanticAnalyzer {
                 return VariableType.UNKNOWN;
             }
 
+        } else if (expression instanceof ArrayExpression arr) {
+            for (Expression el : arr.getElements())
+                visitExpression(el);
+            return VariableType.UNKNOWN;
+        } else if (expression instanceof IndexExpression idx) {
+            visitExpression(idx.getArray());
+            visitExpression(idx.getIndex());
+            return VariableType.UNKNOWN;
+        } else if (expression instanceof ArrayAssignExpression arrAsgn) {
+            visitExpression(arrAsgn.getArray());
+            visitExpression(arrAsgn.getIndex());
+            visitExpression(arrAsgn.getValue());
+            return VariableType.UNKNOWN;
         } else {
             errors.add("Unsupported expression type: " + expression.getClass().getSimpleName());
             return VariableType.UNKNOWN;

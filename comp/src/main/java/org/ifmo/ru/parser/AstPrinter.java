@@ -8,18 +8,19 @@ import java.util.List;
 public class AstPrinter {
     public void print(List<Statement> statements) {
         System.out.println("Root (Program)");
-        
+
         for (int i = 0; i < statements.size(); i++) {
             printNode(statements.get(i), "", i == statements.size() - 1);
         }
     }
 
     private void printNode(Object node, String indent, boolean isLast) {
-        if (node == null) return;
-        
+        if (node == null)
+            return;
+
         String marker = isLast ? "└── " : "├── ";
         System.out.print(indent + marker);
-        
+
         String childIndent = indent + (isLast ? "    " : "│   ");
 
         if (node instanceof VarStatement v) {
@@ -34,7 +35,7 @@ public class AstPrinter {
             System.out.println("IfStatement");
             printNode(i.getCondition(), childIndent, false);
             printNode(i.getThenBranch(), childIndent, i.getElseBranch() == null);
-            
+
             if (i.getElseBranch() != null) {
                 printNode(i.getElseBranch(), childIndent, true);
             }
@@ -69,6 +70,21 @@ public class AstPrinter {
             System.out.println("Boolean: " + b.isValue());
         } else if (node instanceof VariableExpression varExpr) {
             System.out.println("Variable: " + varExpr.getName());
+        } else if (node instanceof ArrayExpression arr) {
+            System.out.println("ArrayExpression");
+            List<Expression> elements = arr.getElements();
+            for (int j = 0; j < elements.size(); j++) {
+                printNode(elements.get(j), childIndent, j == elements.size() - 1);
+            }
+        } else if (node instanceof IndexExpression idx) {
+            System.out.println("IndexExpression (Access)");
+            printNode(idx.getArray(), childIndent, false);
+            printNode(idx.getIndex(), childIndent, true);
+        } else if (node instanceof ArrayAssignExpression arrAsgn) {
+            System.out.println("ArrayAssignExpression (Write)");
+            printNode(arrAsgn.getArray(), childIndent, false);
+            printNode(arrAsgn.getIndex(), childIndent, false);
+            printNode(arrAsgn.getValue(), childIndent, true);
         } else {
             System.out.println("Unknown Node: " + node.getClass().getSimpleName());
         }

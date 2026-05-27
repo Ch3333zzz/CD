@@ -43,6 +43,8 @@ public class Lexer {
             Map.entry(")", TokenType.RPAREN),
             Map.entry("{", TokenType.LBRACE),
             Map.entry("}", TokenType.RBRACE),
+            Map.entry("[", TokenType.LBRACK),
+            Map.entry("]", TokenType.RBRACK),
             Map.entry(";", TokenType.SEMICOLON),
             Map.entry(",", TokenType.COMMA));
 

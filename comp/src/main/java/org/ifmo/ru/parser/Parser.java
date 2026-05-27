@@ -148,6 +148,10 @@ public class Parser {
                 return new AssignExpression(varExpr.getName(), value);
             }
 
+            if (expression instanceof IndexExpression indexExpr) {
+                return new ArrayAssignExpression(indexExpr.getArray(), indexExpr.getIndex(), value);
+            }
+
             throw new Exception("[Parse Error] Line %d: Incorrect target of assignment".formatted(equals.getLine()));
         }
 
@@ -242,6 +246,10 @@ public class Parser {
         while (true) {
             if (match(TokenType.LPAREN)) {
                 expression = finishCall(expression);
+            } else if (match(TokenType.LBRACK)) {
+                Expression index = parseExpression();
+                consume(TokenType.RBRACK, "Expect ']' after array index.");
+                expression = new IndexExpression(expression, index);
             } else {
                 break;
             }
@@ -286,6 +294,17 @@ public class Parser {
             Expression expression = parseExpression();
             consume(TokenType.RPAREN, "Expecting ')' after expression");
             return expression;
+        }
+
+        if (match(TokenType.LBRACK)) {
+            List<Expression> elements = new ArrayList<>();
+            if (!check(TokenType.RBRACK)) {
+                do {
+                    elements.add(parseExpression());
+                } while (match(TokenType.COMMA));
+            }
+            consume(TokenType.RBRACK, "Expect ']' after array elements.");
+            return new ArrayExpression(elements);
         }
 
         throw new Exception(
